@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Shield,
   Globe,
   Bell,
   BarChart3,
@@ -23,8 +22,10 @@ import {
   Users,
   Target,
   Smartphone,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState("monitoring");
@@ -36,7 +37,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-indigo-600" />
+              <Logo className="h-8 w-8" />
               <span className="text-2xl font-bold text-gray-900">
                 Agency Uptime
               </span>
@@ -68,12 +69,14 @@ export default function LandingPage() {
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                className="text-gray-600 hover:text-indigo-600"
-              >
-                Sign In
-              </Button>
+              <Link href="/login">
+                <Button
+                  variant="ghost"
+                  className="text-gray-600 hover:text-indigo-600"
+                >
+                  Sign In
+                </Button>
+              </Link>
               <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
                 Start Free Trial
               </Button>
@@ -614,7 +617,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center space-x-2 mb-4">
-                  <Shield className="h-8 w-8 text-indigo-400" />
+                  <Logo className="h-8 w-8" />
                   <span className="text-2xl font-bold">Agency Uptime</span>
                 </div>
                 <p className="text-gray-400 mb-4">
