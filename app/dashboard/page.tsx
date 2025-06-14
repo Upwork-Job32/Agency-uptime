@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
@@ -41,86 +41,183 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AddSiteModal } from "@/components/AddSiteModal";
+import { GenerateReportModal } from "@/components/GenerateReportModal";
+import { ManageAlertsModal } from "@/components/ManageAlertsModal";
+import { BillingSettingsModal } from "@/components/BillingSettingsModal";
+import { InviteTeamModal } from "@/components/InviteTeamModal";
+import { AddSiteButton } from "@/components/AddSiteButton";
+import { TestMonitoringButton } from "@/components/TestMonitoringButton";
+import { MonitoringStatus } from "@/components/MonitoringStatus";
+
+interface Site {
+  id: number;
+  name: string;
+  url: string;
+  current_status?: string;
+  uptime_percentage: string;
+  check_interval: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DashboardStats {
+  total_sites: number;
+  active_sites: number;
+  total_incidents: number;
+  total_alerts: number;
+  uptime_percentage: string;
+}
+
+interface Alert {
+  id: number;
+  site_name: string;
+  type: string;
+  message: string;
+  sent_at: string;
+  severity?: string;
+}
 
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
+  const [sites, setSites] = useState<Site[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    total_sites: 0,
+    active_sites: 0,
+    total_incidents: 0,
+    total_alerts: 0,
+    uptime_percentage: "0",
+  });
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isLoadingSites, setIsLoadingSites] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const { user, logout } = useAuth();
 
-  // Mock data for dashboard
-  const stats = {
-    totalSites: 12,
-    upSites: 11,
-    downSites: 1,
-    avgUptime: 99.2,
-    alertsToday: 3,
-    responseTime: 245,
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "http://localhost:5000/api/admin/dashboard",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats:", error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, []);
+
+  const fetchSites = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/sites", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSites(data.sites || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch sites:", error);
+    } finally {
+      setIsLoadingSites(false);
+    }
+  }, []);
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/alerts?limit=5", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAlerts(data.alerts || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch alerts:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    fetchSites();
+    fetchAlerts();
+  }, [fetchStats, fetchSites, fetchAlerts]);
+
+  const handleSiteAdded = () => {
+    fetchSites();
+    fetchStats();
   };
 
-  const sites = [
-    {
-      id: 1,
-      name: "example.com",
-      status: "up",
-      uptime: 99.9,
-      responseTime: 210,
-      lastCheck: "2 min ago",
-      alerts: 0,
-    },
-    {
-      id: 2,
-      name: "api.example.com",
-      status: "up",
-      uptime: 100,
-      responseTime: 180,
-      lastCheck: "1 min ago",
-      alerts: 0,
-    },
-    {
-      id: 3,
-      name: "app.example.com",
-      status: "down",
-      uptime: 98.5,
-      responseTime: 0,
-      lastCheck: "5 min ago",
-      alerts: 2,
-    },
-    {
-      id: 4,
-      name: "blog.example.com",
-      status: "up",
-      uptime: 99.8,
-      responseTime: 320,
-      lastCheck: "3 min ago",
-      alerts: 1,
-    },
-  ];
+  const filteredSites = sites.filter(
+    (site) =>
+      site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      site.url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const recentAlerts = [
-    {
-      id: 1,
-      site: "app.example.com",
-      type: "DOWN",
-      message: "HTTP 500 - Internal Server Error",
-      time: "5 minutes ago",
-      severity: "critical",
-    },
-    {
-      id: 2,
-      site: "blog.example.com",
-      type: "SLOW",
-      message: "Response time above 3s threshold",
-      time: "2 hours ago",
-      severity: "warning",
-    },
-    {
-      id: 3,
-      site: "api.example.com",
-      type: "SSL",
-      message: "SSL certificate expires in 7 days",
-      time: "1 day ago",
-      severity: "info",
-    },
-  ];
+  // Calculate actual up/down counts based on current status
+  const upSites = sites.filter((site) => site.current_status === "up").length;
+  const downSites = sites.filter(
+    (site) => site.current_status === "down"
+  ).length;
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case "up":
+        return "text-green-600";
+      case "down":
+        return "text-red-600";
+      default:
+        return "text-gray-400";
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "up":
+        return <CheckCircle className="h-4 w-4" />;
+      case "down":
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const formatCheckInterval = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    return `${Math.floor(seconds / 3600)}h`;
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
+    return `${Math.floor(diffMins / 1440)} days ago`;
+  };
 
   return (
     <ProtectedRoute>
@@ -177,7 +274,7 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-600 mt-1">
-                  Monitor your clients' websites and track performance
+                  Monitor your clients&apos; websites and track performance
                 </p>
               </div>
               <div className="flex items-center space-x-4">
@@ -195,116 +292,115 @@ export default function Dashboard() {
                     <SelectItem value="90d">Last 90 days</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Site
-                </Button>
+                <AddSiteModal onSiteAdded={handleSiteAdded} />
               </div>
             </div>
           </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <Card className="lg:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
                   Total Sites
                 </CardTitle>
+                <Globe className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
-                  {stats.totalSites}
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? "..." : stats.total_sites}
                 </div>
-                <div className="flex items-center text-sm text-green-600 mt-1">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +2 this month
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.active_sites} active
+                </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  Up
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Up</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">
-                  {stats.upSites}
+                <div className="text-2xl font-bold text-green-600">
+                  {isLoadingStats || isLoadingSites ? "..." : upSites}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Sites online</div>
+                <p className="text-xs text-muted-foreground">Sites online</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  Down
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Down</CardTitle>
+                <XCircle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-red-600">
-                  {stats.downSites}
+                <div className="text-2xl font-bold text-red-600">
+                  {isLoadingStats || isLoadingSites ? "..." : downSites}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Sites offline</div>
+                <p className="text-xs text-muted-foreground">Sites offline</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
                   Avg Uptime
                 </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
-                  {stats.avgUptime}%
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? "..." : `${stats.uptime_percentage}%`}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Last 30 days</div>
+                <p className="text-xs text-muted-foreground">
+                  Last {selectedPeriod === "24h" ? "24 hours" : selectedPeriod}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  Response Time
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Alerts</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-900">
-                  {stats.responseTime}ms
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? "..." : stats.total_alerts}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Average</div>
+                <p className="text-xs text-muted-foreground">This month</p>
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2">
-              <Tabs defaultValue="sites" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3">
+            <div className="lg:col-span-3">
+              <Tabs defaultValue="sites" className="space-y-4">
+                <TabsList>
                   <TabsTrigger value="sites">Sites</TabsTrigger>
                   <TabsTrigger value="alerts">Alerts</TabsTrigger>
                   <TabsTrigger value="reports">Reports</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="sites" className="space-y-6">
+                <TabsContent value="sites" className="space-y-4">
                   <Card>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div>
                           <CardTitle>Monitored Sites</CardTitle>
                           <CardDescription>
-                            Manage and monitor your clients' websites
+                            Manage and monitor your clients&apos; websites
                           </CardDescription>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                               placeholder="Search sites..."
-                              className="pl-10 w-64"
+                              className="pl-8 w-64"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
                             />
                           </div>
                           <Button variant="outline" size="sm">
@@ -314,176 +410,153 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {sites.map((site) => (
-                          <div
-                            key={site.id}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center space-x-2">
-                                {site.status === "up" ? (
-                                  <CheckCircle className="h-5 w-5 text-green-500" />
-                                ) : (
-                                  <XCircle className="h-5 w-5 text-red-500" />
-                                )}
-                                <span className="font-medium text-gray-900">
-                                  {site.name}
-                                </span>
-                              </div>
-                              <Badge
-                                variant={
-                                  site.status === "up"
-                                    ? "default"
-                                    : "destructive"
-                                }
-                                className={
-                                  site.status === "up"
-                                    ? "bg-green-100 text-green-800"
-                                    : ""
-                                }
-                              >
-                                {site.status.toUpperCase()}
-                              </Badge>
-                              {site.alerts > 0 && (
-                                <Badge
-                                  variant="destructive"
-                                  className="bg-red-100 text-red-800"
+                      {isLoadingSites ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">Loading sites...</p>
+                        </div>
+                      ) : filteredSites.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500 mb-4">
+                            {sites.length === 0
+                              ? "No sites added yet"
+                              : "No sites match your search"}
+                          </p>
+                          {sites.length === 0 && (
+                            <AddSiteModal onSiteAdded={handleSiteAdded} />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {filteredSites.map((site) => (
+                            <div
+                              key={site.id}
+                              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                            >
+                              <div className="flex items-center space-x-4">
+                                <div
+                                  className={`${getStatusColor(
+                                    site.current_status
+                                  )}`}
                                 >
-                                  {site.alerts} alerts
-                                </Badge>
-                              )}
+                                  {getStatusIcon(site.current_status)}
+                                </div>
+                                <div>
+                                  <h3 className="font-medium">{site.name}</h3>
+                                  <p className="text-sm text-gray-500">
+                                    {site.url}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-6 text-sm">
+                                <div className="text-center">
+                                  <p className="font-medium">
+                                    {site.current_status?.toUpperCase() ||
+                                      "UNKNOWN"}
+                                  </p>
+                                  <p className="text-gray-500">Status</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-medium">
+                                    {site.uptime_percentage}%
+                                  </p>
+                                  <p className="text-gray-500">Uptime</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-medium">
+                                    {formatCheckInterval(site.check_interval)}
+                                  </p>
+                                  <p className="text-gray-500">Interval</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-medium">
+                                    {formatTimeAgo(site.updated_at)}
+                                  </p>
+                                  <p className="text-gray-500">Last Check</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <TestMonitoringButton
+                                    siteId={site.id}
+                                    siteName={site.name}
+                                  />
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-6 text-sm text-gray-600">
-                              <div>
-                                <span className="font-medium">
-                                  {site.uptime}%
-                                </span>
-                                <span className="text-gray-400 ml-1">
-                                  uptime
-                                </span>
-                              </div>
-                              <div>
-                                <span className="font-medium">
-                                  {site.responseTime}ms
-                                </span>
-                                <span className="text-gray-400 ml-1">
-                                  response
-                                </span>
-                              </div>
-                              <div>
-                                <Clock className="h-4 w-4 inline mr-1" />
-                                {site.lastCheck}
-                              </div>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="alerts" className="space-y-6">
+                <TabsContent value="alerts" className="space-y-4">
                   <Card>
                     <CardHeader>
                       <CardTitle>Recent Alerts</CardTitle>
                       <CardDescription>
-                        Stay informed about your sites' status changes
+                        Latest notifications and incidents
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {recentAlerts.map((alert) => (
-                          <div
-                            key={alert.id}
-                            className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex-shrink-0">
-                              {alert.severity === "critical" && (
-                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                              )}
-                              {alert.severity === "warning" && (
-                                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                              )}
-                              {alert.severity === "info" && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h4 className="font-medium text-gray-900">
-                                    {alert.site}
+                      {alerts.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No recent alerts</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {alerts.map((alert) => (
+                            <div
+                              key={alert.id}
+                              className="flex items-start space-x-4 p-4 border rounded-lg"
+                            >
+                              <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-medium">
+                                    {alert.site_name}
                                   </h4>
-                                  <p className="text-sm text-gray-600 mt-1">
-                                    {alert.message}
-                                  </p>
+                                  <span className="text-xs text-gray-500">
+                                    {formatTimeAgo(alert.sent_at)}
+                                  </span>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  {alert.time}
-                                </div>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {alert.message}
+                                </p>
+                                <Badge
+                                  variant="outline"
+                                  className="mt-2 text-xs"
+                                >
+                                  {alert.type}
+                                </Badge>
                               </div>
-                              <Badge
-                                variant="outline"
-                                className={`mt-2 ${
-                                  alert.severity === "critical"
-                                    ? "text-red-600 border-red-200"
-                                    : alert.severity === "warning"
-                                    ? "text-yellow-600 border-yellow-200"
-                                    : "text-blue-600 border-blue-200"
-                                }`}
-                              >
-                                {alert.type}
-                              </Badge>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="reports" className="space-y-6">
+                <TabsContent value="reports" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Monthly Reports</CardTitle>
+                      <CardTitle>Reports</CardTitle>
                       <CardDescription>
-                        Generate and download branded reports for your clients
+                        Generate and download monitoring reports
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {[
-                          "November 2024",
-                          "October 2024",
-                          "September 2024",
-                        ].map((month, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                          >
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                {month} Report
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                12 sites monitored
-                              </p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge className="bg-green-100 text-green-800">
-                                Generated
-                              </Badge>
-                              <Button variant="outline" size="sm">
-                                <Download className="h-4 w-4 mr-2" />
-                                Download PDF
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="text-center py-8">
+                        <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 mb-4">
+                          Generate comprehensive reports for your monitoring
+                          data
+                        </p>
+                        <GenerateReportModal />
                       </div>
                     </CardContent>
                   </Card>
@@ -493,109 +566,51 @@ export default function Dashboard() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Quick Actions */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Quick Actions</CardTitle>
+                  <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Site
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Manage Alerts
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Users className="h-4 w-4 mr-2" />
-                    Invite Team
-                  </Button>
+                  <AddSiteModal onSiteAdded={handleSiteAdded} />
+                  <GenerateReportModal />
+                  <ManageAlertsModal />
+                  <InviteTeamModal />
                 </CardContent>
               </Card>
 
-              {/* Account Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Account Status</CardTitle>
+                  <CardTitle>Account Status</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Plan</span>
-                      <Badge className="bg-indigo-100 text-indigo-800">
-                        Professional
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Sites Used</span>
-                      <span className="text-sm font-medium">12 / 100</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-indigo-600 h-2 rounded-full"
-                        style={{ width: "12%" }}
-                      ></div>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Billing Settings
-                    </Button>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Plan</span>
+                    <Badge className="bg-indigo-100 text-indigo-800">
+                      Trial
+                    </Badge>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Sites Used</span>
+                    <span className="text-sm font-medium">
+                      {stats.total_sites} / 1000
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-indigo-600 h-2 rounded-full"
+                      style={{
+                        width: `${Math.min(
+                          (stats.total_sites / 1000) * 100,
+                          100
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <BillingSettingsModal />
                 </CardContent>
               </Card>
 
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      {
-                        action: "Site added",
-                        site: "new-client.com",
-                        time: "2h ago",
-                      },
-                      {
-                        action: "Alert sent",
-                        site: "app.example.com",
-                        time: "5h ago",
-                      },
-                      {
-                        action: "Report generated",
-                        site: "All sites",
-                        time: "1d ago",
-                      },
-                      {
-                        action: "Site updated",
-                        site: "api.example.com",
-                        time: "2d ago",
-                      },
-                    ].map((activity, index) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-indigo-600 rounded-full mt-2 flex-shrink-0"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {activity.action}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {activity.site}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {activity.time}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <MonitoringStatus />
             </div>
           </div>
         </div>

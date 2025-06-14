@@ -84,8 +84,8 @@ export default function RegisterPage() {
               Agency Uptime
             </span>
           </div>
-          <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
-            🚀 Start Your Free Trial
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            🚀 14-Day Free Trial - No Credit Card Required
           </Badge>
         </div>
 
@@ -96,7 +96,8 @@ export default function RegisterPage() {
               Create Your Account
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Join hundreds of agencies monitoring their clients&apos; websites
+              Start your 14-day free trial and join hundreds of agencies
+              monitoring their clients&apos; websites
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -254,7 +255,8 @@ export default function RegisterPage() {
         {/* Features */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 mb-2">
-            14-day free trial • No credit card required • Cancel anytime
+            ✓ 14-day free trial • ✓ No credit card required • ✓ Cancel anytime •
+            ✓ Full access to all features
           </p>
         </div>
       </div>

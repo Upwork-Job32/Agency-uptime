@@ -25,10 +25,16 @@ import {
   Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState("monitoring");
+  const router = useRouter();
+
+  const handleStartFreeTrial = () => {
+    router.push("/register");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -77,7 +83,10 @@ export default function LandingPage() {
                   Sign In
                 </Button>
               </Link>
-              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                onClick={handleStartFreeTrial}
+              >
                 Start Free Trial
               </Button>
             </div>
@@ -109,6 +118,7 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 text-lg"
+                  onClick={handleStartFreeTrial}
                 >
                   Start 14-Day Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -411,7 +421,10 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <Button
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={handleStartFreeTrial}
+                  >
                     Start Free Trial
                   </Button>
                 </CardContent>
@@ -580,6 +593,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-4 text-lg"
+                onClick={handleStartFreeTrial}
               >
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
