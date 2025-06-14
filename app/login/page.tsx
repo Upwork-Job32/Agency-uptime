@@ -16,6 +16,7 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,27 +33,16 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Here you would make the API call to your backend
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Store the token (you might want to use a more secure method)
-        localStorage.setItem("token", data.token);
-        // Redirect to dashboard
+      const success = await login(email, password);
+      if (success) {
         router.push("/dashboard");
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Login failed");
+        setError(
+          "Invalid email or password. Please check if the backend server is running."
+        );
       }
     } catch (error) {
-      setError("Network error. Please try again.");
+      setError("Network error. Please check if the backend server is running.");
     } finally {
       setIsLoading(false);
     }

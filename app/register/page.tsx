@@ -16,6 +16,7 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { register } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,24 +50,20 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.token);
+      const success = await register(
+        formData.agencyName,
+        formData.email,
+        formData.password
+      );
+      if (success) {
         router.push("/dashboard");
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Registration failed");
+        setError(
+          "Registration failed. Please check if the backend server is running."
+        );
       }
     } catch (error) {
-      setError("Network error. Please try again.");
+      setError("Network error. Please check if the backend server is running.");
     } finally {
       setIsLoading(false);
     }
