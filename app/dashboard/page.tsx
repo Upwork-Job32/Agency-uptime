@@ -49,6 +49,7 @@ import { InviteTeamModal } from "@/components/InviteTeamModal";
 import { AddSiteButton } from "@/components/AddSiteButton";
 import { TestMonitoringButton } from "@/components/TestMonitoringButton";
 import { MonitoringStatus } from "@/components/MonitoringStatus";
+import { WhiteLabelSettings } from "@/components/WhiteLabelSettings";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface Site {
@@ -576,6 +577,7 @@ export default function Dashboard() {
                   <AddSiteModal onSiteAdded={handleSiteAdded} />
                   <GenerateReportModal />
                   <ManageAlertsModal />
+                  <WhiteLabelSettings />
                   <InviteTeamModal />
                 </CardContent>
               </Card>
