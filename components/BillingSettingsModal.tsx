@@ -177,7 +177,10 @@ export function BillingSettingsModal() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="capitalize">
-                      {subscription.plan_type} Plan
+                      {subscription.plan_type === "basic"
+                        ? "Professional"
+                        : subscription.plan_type}{" "}
+                      Plan
                     </CardTitle>
                     <Badge className={getStatusColor(subscription.status)}>
                       {subscription.status}

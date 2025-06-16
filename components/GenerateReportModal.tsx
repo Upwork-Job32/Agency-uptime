@@ -19,8 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, Loader2, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BarChart3, Loader2, Download, Lock, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 export function GenerateReportModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +31,19 @@ export function GenerateReportModal() {
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const { toast } = useToast();
+  const { canGenerateReports, isPro } = useSubscription();
 
   const handleGenerate = async () => {
+    if (!canGenerateReports) {
+      toast({
+        title: "Feature Restricted",
+        description:
+          "PDF report generation is only available for Pro plan users with the PDF Reports add-on.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -97,6 +111,67 @@ export function GenerateReportModal() {
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  // Show upgrade prompt for trial users
+  if (!canGenerateReports) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full justify-start relative">
+            <Lock className="h-4 w-4 mr-2" />
+            Generate Report
+            <Badge className="ml-auto bg-yellow-100 text-yellow-800 text-xs">
+              Pro
+            </Badge>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2 text-yellow-500" />
+              Upgrade Required
+            </DialogTitle>
+            <DialogDescription>
+              PDF report generation is available for Pro plan users with the PDF
+              Reports add-on.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                What you&apos;ll get with Pro + PDF Reports:
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />
+                  Automated monthly PDF reports
+                </li>
+                <li className="flex items-center">
+                  <Download className="h-4 w-4 mr-2 text-indigo-600" />
+                  Custom branded reports
+                </li>
+                <li className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />
+                  Historical data analysis
+                </li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Maybe Later
+            </Button>
+            <Button asChild>
+              <Link href="/billing">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Upgrade Now
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

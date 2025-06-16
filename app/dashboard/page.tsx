@@ -49,6 +49,7 @@ import { InviteTeamModal } from "@/components/InviteTeamModal";
 import { AddSiteButton } from "@/components/AddSiteButton";
 import { TestMonitoringButton } from "@/components/TestMonitoringButton";
 import { MonitoringStatus } from "@/components/MonitoringStatus";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface Site {
   id: number;
@@ -94,6 +95,7 @@ export default function Dashboard() {
   const [isLoadingSites, setIsLoadingSites] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const { user, logout } = useAuth();
+  const { subscription, isPro, isTrial, isExpired } = useSubscription();
 
   const fetchStats = useCallback(async () => {
     try {
@@ -585,22 +587,32 @@ export default function Dashboard() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Plan</span>
-                    <Badge className="bg-indigo-100 text-indigo-800">
-                      Trial
+                    <Badge
+                      className={
+                        isPro
+                          ? "bg-green-100 text-green-800"
+                          : isExpired
+                          ? "bg-red-100 text-red-800"
+                          : "bg-indigo-100 text-indigo-800"
+                      }
+                    >
+                      {isPro ? "Professional" : isExpired ? "Expired" : "Trial"}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Sites Used</span>
                     <span className="text-sm font-medium">
-                      {stats.total_sites} / 1000
+                      {stats.total_sites} / {isPro ? "1000" : "3"}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-indigo-600 h-2 rounded-full"
+                      className={`h-2 rounded-full ${
+                        isPro ? "bg-green-600" : "bg-indigo-600"
+                      }`}
                       style={{
                         width: `${Math.min(
-                          (stats.total_sites / 1000) * 100,
+                          (stats.total_sites / (isPro ? 1000 : 3)) * 100,
                           100
                         )}%`,
                       }}

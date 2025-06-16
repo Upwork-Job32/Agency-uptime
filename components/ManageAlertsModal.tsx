@@ -15,8 +15,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Loader2, TestTube } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Bell,
+  Loader2,
+  TestTube,
+  Lock,
+  CreditCard,
+  MessageSquare,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 interface AlertSettings {
   ghl_integration: {
@@ -43,6 +53,7 @@ export function ManageAlertsModal() {
     api_key: "",
   });
   const { toast } = useToast();
+  const { canUseSlackAlerts, isPro } = useSubscription();
 
   const fetchSettings = async () => {
     try {
@@ -174,6 +185,67 @@ export function ManageAlertsModal() {
       setIsTesting(false);
     }
   };
+
+  // Show upgrade prompt for trial users wanting Slack alerts
+  if (!canUseSlackAlerts) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full justify-start relative">
+            <Lock className="h-4 w-4 mr-2" />
+            Manage Alerts
+            <Badge className="ml-auto bg-yellow-100 text-yellow-800 text-xs">
+              Pro
+            </Badge>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2 text-yellow-500" />
+              Upgrade Required
+            </DialogTitle>
+            <DialogDescription>
+              Advanced alert management including Slack integration is available
+              for Pro plan users.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                What you&apos;ll get with Pro:
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2 text-indigo-600" />
+                  Slack integration
+                </li>
+                <li className="flex items-center">
+                  <Bell className="h-4 w-4 mr-2 text-indigo-600" />
+                  Advanced webhook alerts
+                </li>
+                <li className="flex items-center">
+                  <TestTube className="h-4 w-4 mr-2 text-indigo-600" />
+                  Custom alert policies
+                </li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Maybe Later
+            </Button>
+            <Button asChild>
+              <Link href="/billing">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Upgrade Now
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

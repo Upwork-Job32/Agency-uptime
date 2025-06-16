@@ -20,8 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Loader2, Mail } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Loader2, Mail, Lock, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 export function InviteTeamModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,9 +35,20 @@ export function InviteTeamModal() {
     message: "",
   });
   const { toast } = useToast();
+  const { canInviteTeam, isPro } = useSubscription();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canInviteTeam) {
+      toast({
+        title: "Feature Restricted",
+        description: "Team invitations are only available for Pro plan users.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -62,6 +76,66 @@ export function InviteTeamModal() {
       setIsLoading(false);
     }
   };
+
+  // Show upgrade prompt for trial users
+  if (!canInviteTeam) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full justify-start relative">
+            <Lock className="h-4 w-4 mr-2" />
+            Invite Team
+            <Badge className="ml-auto bg-yellow-100 text-yellow-800 text-xs">
+              Pro
+            </Badge>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2 text-yellow-500" />
+              Upgrade Required
+            </DialogTitle>
+            <DialogDescription>
+              Team collaboration is available for Pro plan users.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                What you&apos;ll get with Pro:
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <Users className="h-4 w-4 mr-2 text-indigo-600" />
+                  Unlimited team members
+                </li>
+                <li className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-indigo-600" />
+                  Role-based permissions
+                </li>
+                <li className="flex items-center">
+                  <Users className="h-4 w-4 mr-2 text-indigo-600" />
+                  Collaborative monitoring
+                </li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Maybe Later
+            </Button>
+            <Button asChild>
+              <Link href="/billing">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Upgrade Now
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
