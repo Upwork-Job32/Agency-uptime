@@ -76,9 +76,31 @@ export function GenerateReportModal() {
           "Report generated successfully. Download will start shortly.",
       });
 
-      // Open download URL in new window
+      // Download file with proper authentication
       if (data.download_url) {
-        window.open(`http://localhost:5000${data.download_url}`, "_blank");
+        const downloadResponse = await fetch(
+          `http://localhost:5000${data.download_url}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (downloadResponse.ok) {
+          const blob = await downloadResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `report_${year}_${month.padStart(2, "0")}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else {
+          throw new Error("Failed to download report");
+        }
       }
 
       setIsOpen(false);
