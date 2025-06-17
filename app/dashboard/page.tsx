@@ -451,40 +451,44 @@ export default function Dashboard() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-6 text-sm">
-                                <div className="text-center">
-                                  <p className="font-medium">
-                                    {site.current_status?.toUpperCase() ||
-                                      "UNKNOWN"}
-                                  </p>
-                                  <p className="text-gray-500">Status</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="font-medium">
-                                    {site.uptime_percentage}%
-                                  </p>
-                                  <p className="text-gray-500">Uptime</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="font-medium">
-                                    {formatCheckInterval(site.check_interval)}
-                                  </p>
-                                  <p className="text-gray-500">Interval</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="font-medium">
-                                    {formatTimeAgo(site.updated_at)}
-                                  </p>
-                                  <p className="text-gray-500">Last Check</p>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <TestMonitoringButton
-                                    siteId={site.id}
-                                    siteName={site.name}
-                                  />
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
+                              <div className="flex items-center justify-between text-sm text-gray-500">
+                                <div className="flex items-center space-x-4">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="font-medium text-gray-900">
+                                      Status
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        site.current_status === "up"
+                                          ? "default"
+                                          : "destructive"
+                                      }
+                                    >
+                                      {site.current_status?.toUpperCase() ||
+                                        "UNKNOWN"}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="font-medium text-gray-900">
+                                      Uptime
+                                    </span>
+                                    <span>{site.uptime_percentage}%</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="font-medium text-gray-900">
+                                      Interval
+                                    </span>
+                                    <span>{site.check_interval}m</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <Clock className="h-4 w-4" />
+                                    <span>
+                                      {new Date(
+                                        site.updated_at
+                                      ).toLocaleDateString()}
+                                    </span>
+                                    <span className="text-xs">Last Check</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>

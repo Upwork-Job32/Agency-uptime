@@ -417,6 +417,45 @@ export function ManageAlertsModal() {
     }
   };
 
+  const handleTestAllSites = async () => {
+    setIsTesting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "http://localhost:5000/api/alerts/test-all-sites",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Status report sent",
+          description: data.message,
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send status report");
+      }
+    } catch (error) {
+      toast({
+        title: "Test failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to send status report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
   if (!canUseSlackAlerts) {
     return (
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -606,14 +645,42 @@ export function ManageAlertsModal() {
                 />
               </div>
 
-              <Button
-                onClick={handleSaveSettings}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Settings
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Settings
+                </Button>
+
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    📊 Test All Sites Status Report
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Send a comprehensive status report showing all monitored
+                    sites to all active integrations (Slack, Discord, Telegram,
+                    etc.)
+                  </p>
+                  <Button
+                    onClick={handleTestAllSites}
+                    disabled={isTesting}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isTesting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-2 h-4 w-4" />
+                    )}
+                    Send Status Report to All Integrations
+                  </Button>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
