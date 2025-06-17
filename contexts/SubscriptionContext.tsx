@@ -24,6 +24,7 @@ interface SubscriptionContextType {
   canInviteTeam: boolean;
   canUseSlackAlerts: boolean;
   canUseAddons: boolean;
+  canUseWhiteLabel: boolean;
   hasAddon: (addonId: string) => boolean;
   getTrialDaysRemaining: () => number;
   refreshSubscription: () => Promise<void>;
@@ -120,6 +121,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
   const canInviteTeam = isPro;
   const canUseSlackAlerts = isPro;
   const canUseAddons = isPro;
+  const canUseWhiteLabel = isPro;
 
   // Calculate trial days remaining
   const getTrialDaysRemaining = () => {
@@ -150,6 +152,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
     canInviteTeam,
     canUseSlackAlerts,
     canUseAddons,
+    canUseWhiteLabel,
     hasAddon,
     getTrialDaysRemaining,
     refreshSubscription,

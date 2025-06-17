@@ -35,6 +35,7 @@ interface Subscription {
 export function BillingSettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [addonLoading, setAddonLoading] = useState<Record<string, boolean>>({});
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const { toast } = useToast();
 
@@ -53,9 +54,39 @@ export function BillingSettingsModal() {
       if (response.ok) {
         const data = await response.json();
         setSubscription(data.subscription);
+      } else {
+        console.error(
+          "Failed to fetch subscription:",
+          response.status,
+          response.statusText
+        );
+        // Set default trial subscription on error
+        setSubscription({
+          id: "trial",
+          plan_type: "trial",
+          status: "trialing",
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(
+            Date.now() + 14 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          stripe_subscription_id: null,
+          active_addons: [],
+        });
       }
     } catch (error) {
       console.error("Failed to fetch subscription:", error);
+      // Set default trial subscription on error
+      setSubscription({
+        id: "trial",
+        plan_type: "trial",
+        status: "trialing",
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(
+          Date.now() + 14 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        stripe_subscription_id: null,
+        active_addons: [],
+      });
     }
   };
 
@@ -109,6 +140,61 @@ export function BillingSettingsModal() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddAddon = async (addonId: string) => {
+    setAddonLoading((prev) => ({ ...prev, [addonId]: true }));
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "http://localhost:5000/api/billing/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            plan_type: subscription?.plan_type || "basic",
+            addons: [addonId],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create checkout session");
+      }
+
+      const data = await response.json();
+
+      // Redirect to Stripe checkout
+      window.location.href = data.checkout_url;
+
+      toast({
+        title: "Redirecting to Stripe",
+        description: "You will be redirected to complete your payment.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to start checkout",
+        variant: "destructive",
+      });
+    } finally {
+      setAddonLoading((prev) => ({ ...prev, [addonId]: false }));
+    }
+  };
+
+  const handleManageAddon = async (addonId: string) => {
+    // For now, show a message about contacting support
+    toast({
+      title: "Manage Add-on",
+      description:
+        "To modify or cancel this add-on, please contact support at support@agencyuptime.com",
+    });
   };
 
   const addons = [
@@ -276,8 +362,21 @@ export function BillingSettingsModal() {
                           : "default"
                       }
                       size="sm"
-                      disabled={subscription?.status !== "active"}
+                      disabled={
+                        subscription?.status !== "active" ||
+                        addonLoading[addon.id]
+                      }
+                      onClick={() => {
+                        if (subscription?.active_addons?.includes(addon.id)) {
+                          handleManageAddon(addon.id);
+                        } else {
+                          handleAddAddon(addon.id);
+                        }
+                      }}
                     >
+                      {addonLoading[addon.id] ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
                       {subscription?.active_addons?.includes(addon.id)
                         ? "Manage"
                         : "Add to Plan"}

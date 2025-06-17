@@ -85,7 +85,7 @@ export function InviteTeamModal() {
           <Button variant="outline" className="w-full justify-start relative">
             <Lock className="h-4 w-4 mr-2" />
             Invite Team
-            <Badge className="ml-auto bg-yellow-100 text-yellow-800 text-xs">
+            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
               Pro
             </Badge>
           </Button>

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Elements } from "@stripe/react-stripe-js";
+import { useStripe } from "@/contexts/StripeContext";
+import { PaymentForm } from "@/components/PaymentForm";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -127,18 +130,26 @@ const addons = [
 export default function Billing() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { stripe, isLoading: stripeLoading } = useStripe();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const fetchSubscription = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No authentication token found");
+        return;
+      }
+
       const response = await fetch(
         "http://localhost:5000/api/billing/subscription",
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -147,9 +158,45 @@ export default function Billing() {
         const data = await response.json();
         setSubscription(data.subscription);
         setSelectedAddons(data.subscription.active_addons || []);
+      } else {
+        console.error(
+          "Failed to fetch subscription:",
+          response.status,
+          response.statusText
+        );
+
+        // Set default trial subscription on error
+        const defaultTrialSubscription = {
+          id: "trial",
+          plan_type: "trial",
+          status: "trialing",
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(
+            Date.now() + 14 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          stripe_subscription_id: null,
+          active_addons: [],
+        };
+        setSubscription(defaultTrialSubscription);
+        setSelectedAddons([]);
       }
     } catch (error) {
       console.error("Failed to fetch subscription:", error);
+
+      // Set default trial subscription on network error
+      const defaultTrialSubscription = {
+        id: "trial",
+        plan_type: "trial",
+        status: "trialing",
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(
+          Date.now() + 14 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        stripe_subscription_id: null,
+        active_addons: [],
+      };
+      setSubscription(defaultTrialSubscription);
+      setSelectedAddons([]);
     }
   };
 

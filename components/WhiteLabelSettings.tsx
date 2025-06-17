@@ -20,7 +20,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge, Palette, Globe, Eye, ExternalLink, Copy } from "lucide-react";
+import {
+  Badge,
+  Palette,
+  Globe,
+  Eye,
+  ExternalLink,
+  Copy,
+  Lock,
+  Crown,
+} from "lucide-react";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 interface WhiteLabelSettings {
   name: string;
@@ -39,6 +50,7 @@ export function WhiteLabelSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
+  const { isPro, isTrial } = useSubscription();
 
   useEffect(() => {
     fetchSettings();
@@ -111,6 +123,83 @@ export function WhiteLabelSettings() {
   const previewUrl = settings.custom_domain
     ? `https://reports.${settings.custom_domain}`
     : "Configure custom domain first";
+
+  // If user is on trial, show upgrade prompt instead
+  if (isTrial) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full justify-start relative">
+            <Lock className="h-4 w-4 mr-2" />
+            White Label Settings
+            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
+              Pro
+            </Badge>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-orange-500" />
+              Upgrade to Pro
+            </DialogTitle>
+            <DialogDescription>
+              White Label Settings are available with Pro plan
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
+                    <Crown className="h-8 w-8 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      Unlock White Label Features
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Customize your agency branding and create white-labeled
+                      reports portal
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-left">
+                    <div className="flex items-center text-sm">
+                      <Globe className="h-4 w-4 mr-2 text-green-600" />
+                      Custom domain (reports.yourdomain.com)
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Palette className="h-4 w-4 mr-2 text-green-600" />
+                      Agency branding and colors
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Eye className="h-4 w-4 mr-2 text-green-600" />
+                      White-labeled client portal
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button asChild className="flex-1">
+                <Link href="/billing">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade Now
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
