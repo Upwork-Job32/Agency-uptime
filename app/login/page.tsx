@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Logo } from "@/components/ui/logo";
+import { FullLogo } from "@/components/ui/full-logo";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -57,11 +57,8 @@ export default function LoginPage() {
             <ArrowLeft className="h-4 w-4 text-gray-600" />
             <span className="text-sm text-gray-600">Back to home</span>
           </Link>
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Logo className="h-8 w-8" />
-            <span className="text-2xl font-bold text-gray-900">
-              Agency Uptime
-            </span>
+          <div className="flex justify-center mb-4">
+            <FullLogo iconSize={32} textSize="lg" />
           </div>
           <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
             🔐 Secure Agency Portal
@@ -138,7 +135,7 @@ export default function LoginPage() {
                   </Label>
                 </div>
                 <Link
-                  href="/forgot-password"
+                  href="/auth/forgot-password"
                   className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline"
                 >
                   Forgot password?

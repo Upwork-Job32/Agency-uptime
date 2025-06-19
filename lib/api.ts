@@ -107,4 +107,6 @@ export const apiClient = {
   },
 };
 
+export { API_BASE_URL };
+
 export default API_ENDPOINTS;

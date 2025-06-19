@@ -458,51 +458,10 @@ export function ManageAlertsModal() {
 
   if (!canUseSlackAlerts) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start relative">
-            <Lock className="h-4 w-4 mr-2" />
-            Manage Alerts
-            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
-              Pro
-            </Badge>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upgrade Required</DialogTitle>
-            <DialogDescription>
-              Alert management is available with our Pro plan. Upgrade to get
-              notifications when your sites go down.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <h4 className="font-medium mb-2">Pro Plan Features:</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Email alerts</li>
-                <li>• Slack notifications</li>
-                <li>• Discord alerts</li>
-                <li>• Telegram bot</li>
-                <li>• Teams integration</li>
-                <li>• Custom webhooks</li>
-                <li>• Real-time monitoring</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Link href="/billing">
-              <Button>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade Now
-              </Button>
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Button variant="outline" className="w-full justify-start" disabled>
+        <Lock className="h-4 w-4 mr-2" />
+        Manage Alerts
+      </Button>
     );
   }
 

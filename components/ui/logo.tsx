@@ -15,54 +15,46 @@ export const Logo: React.FC<LogoProps> = ({
     <svg
       width={width}
       height={height}
-      viewBox="0 0 100 100"
+      viewBox="0 0 60 60"
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Background circle with gradient */}
       <defs>
         <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#1E40AF" />
+          <stop offset="0%" stopColor="#5B73F5" />
+          <stop offset="100%" stopColor="#4F46E5" />
         </linearGradient>
       </defs>
 
-      {/* Outer circle background */}
+      {/* Main circle background */}
       <circle
-        cx="50"
-        cy="50"
-        r="48"
+        cx="30"
+        cy="30"
+        r="28"
         fill="url(#logoGradient)"
-        stroke="#1E40AF"
+        stroke="#3730A3"
         strokeWidth="1"
       />
 
-      {/* Inner shield/uptime symbol */}
-      <g transform="translate(50, 50)">
-        {/* Main "U" shape for Uptime */}
-        <path
-          d="M -15 -20 L -15 5 Q -15 15 -5 15 L 5 15 Q 15 15 15 5 L 15 -20"
-          fill="none"
-          stroke="white"
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
+      {/* Shield/U shape icon */}
+      <path
+        d="M20 22 L20 35 Q20 42 30 42 Q40 42 40 35 L40 22"
+        fill="none"
+        stroke="white"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
 
-        {/* Upward arrow/chevron for "up" */}
-        <path
-          d="M -10 -5 L 0 -15 L 10 -5"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Small dots for monitoring/status */}
-        <circle cx="-8" cy="8" r="1.5" fill="white" opacity="0.8" />
-        <circle cx="0" cy="8" r="1.5" fill="white" opacity="0.8" />
-        <circle cx="8" cy="8" r="1.5" fill="white" opacity="0.8" />
-      </g>
+      {/* Inner accent line */}
+      <path
+        d="M24 26 L24 35 Q24 38 30 38 Q36 38 36 35 L36 26"
+        fill="none"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.7"
+      />
     </svg>
   );
 };

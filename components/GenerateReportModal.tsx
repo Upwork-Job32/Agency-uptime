@@ -38,7 +38,7 @@ export function GenerateReportModal() {
       toast({
         title: "Feature Restricted",
         description:
-          "PDF report generation is only available for Pro plan users with the PDF Reports add-on.",
+          "PDF report generation is only available for Professional plan users.",
         variant: "destructive",
       });
       return;
@@ -48,20 +48,20 @@ export function GenerateReportModal() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        "http://localhost:5000/api/reports/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            month: parseInt(month),
-            year: parseInt(year),
-          }),
-        }
-      );
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${API_BASE_URL}/api/reports/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          month: parseInt(month),
+          year: parseInt(year),
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -79,7 +79,7 @@ export function GenerateReportModal() {
       // Download file with proper authentication
       if (data.download_url) {
         const downloadResponse = await fetch(
-          `http://localhost:5000${data.download_url}`,
+          `${API_BASE_URL}${data.download_url}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -134,64 +134,13 @@ export function GenerateReportModal() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  // Show upgrade prompt for trial users
+  // Show disabled state for trial users
   if (!canGenerateReports) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start relative">
-            <Lock className="h-4 w-4 mr-2" />
-            Generate Report
-            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
-              Pro
-            </Badge>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Lock className="h-5 w-5 mr-2 text-yellow-500" />
-              Upgrade Required
-            </DialogTitle>
-            <DialogDescription>
-              PDF report generation is available for Pro plan users with the PDF
-              Reports add-on.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
-              <h3 className="font-semibold text-gray-900 mb-2">
-                What you&apos;ll get with Pro + PDF Reports:
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />
-                  Automated monthly PDF reports
-                </li>
-                <li className="flex items-center">
-                  <Download className="h-4 w-4 mr-2 text-indigo-600" />
-                  Custom branded reports
-                </li>
-                <li className="flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />
-                  Historical data analysis
-                </li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Maybe Later
-            </Button>
-            <Button asChild>
-              <Link href="/billing">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade Now
-              </Link>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Button variant="outline" className="w-full justify-start" disabled>
+        <Lock className="h-4 w-4 mr-2" />
+        Generate Report
+      </Button>
     );
   }
 

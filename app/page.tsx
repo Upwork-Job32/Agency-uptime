@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Logo } from "@/components/ui/logo";
+import { FullLogo } from "@/components/ui/full-logo";
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState("monitoring");
@@ -42,12 +42,7 @@ export default function LandingPage() {
       <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Logo className="h-8 w-8" />
-              <span className="text-2xl font-bold text-gray-900">
-                Agency Uptime
-              </span>
-            </div>
+            <FullLogo iconSize={32} textSize="lg" />
             <nav className="hidden md:flex items-center space-x-8">
               <Link
                 href="#features"
@@ -630,9 +625,8 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Logo className="h-8 w-8" />
-                  <span className="text-2xl font-bold">Agency Uptime</span>
+                <div className="mb-4">
+                  <FullLogo iconSize={32} textSize="lg" />
                 </div>
                 <p className="text-gray-400 mb-4">
                   White-label uptime monitoring built specifically for digital
@@ -681,6 +675,14 @@ export default function LandingPage() {
                       className="hover:text-white transition-colors"
                     >
                       Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/portal"
+                      className="hover:text-white transition-colors"
+                    >
+                      Demo Portal
                     </Link>
                   </li>
                 </ul>

@@ -49,6 +49,7 @@ export function WhiteLabelSettings() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [agencyId, setAgencyId] = useState<number | null>(null);
   const { toast } = useToast();
   const { isPro, isTrial } = useSubscription();
 
@@ -59,7 +60,10 @@ export function WhiteLabelSettings() {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/auth/profile", {
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,6 +71,7 @@ export function WhiteLabelSettings() {
 
       if (response.ok) {
         const data = await response.json();
+        setAgencyId(data.agency.id);
         setSettings({
           name: data.agency.name || "",
           brand_color: data.agency.brand_color || "#3B82F6",
@@ -83,7 +88,10 @@ export function WhiteLabelSettings() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/auth/profile", {
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${API_BASE_URL}/api/white-label/config`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -124,80 +132,13 @@ export function WhiteLabelSettings() {
     ? `https://reports.${settings.custom_domain}`
     : "Configure custom domain first";
 
-  // If user is on trial, show upgrade prompt instead
+  // If user is on trial, show disabled button
   if (isTrial) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start relative">
-            <Lock className="h-4 w-4 mr-2" />
-            White Label Settings
-            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
-              Pro
-            </Badge>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-orange-500" />
-              Upgrade to Pro
-            </DialogTitle>
-            <DialogDescription>
-              White Label Settings are available with Pro plan
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
-                    <Crown className="h-8 w-8 text-orange-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">
-                      Unlock White Label Features
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Customize your agency branding and create white-labeled
-                      reports portal
-                    </p>
-                  </div>
-                  <div className="space-y-2 text-left">
-                    <div className="flex items-center text-sm">
-                      <Globe className="h-4 w-4 mr-2 text-green-600" />
-                      Custom domain (reports.yourdomain.com)
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Palette className="h-4 w-4 mr-2 text-green-600" />
-                      Agency branding and colors
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Eye className="h-4 w-4 mr-2 text-green-600" />
-                      White-labeled client portal
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button asChild className="flex-1">
-                <Link href="/billing">
-                  <Crown className="h-4 w-4 mr-2" />
-                  Upgrade Now
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Button variant="outline" className="w-full justify-start" disabled>
+        <Lock className="h-4 w-4 mr-2" />
+        White Label Settings
+      </Button>
     );
   }
 
@@ -227,7 +168,7 @@ export function WhiteLabelSettings() {
             <CardHeader>
               <CardTitle className="text-lg">Agency Branding</CardTitle>
               <CardDescription>
-                Customize your agency's appearance across all client-facing
+                Customize your agency&apos;s appearance across all client-facing
                 pages
               </CardDescription>
             </CardHeader>
@@ -327,37 +268,24 @@ export function WhiteLabelSettings() {
               {settings.custom_domain && (
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <h4 className="font-medium text-blue-900 mb-2">
-                    White-labeled Portal Ready
+                    Custom Domain Configured
                   </h4>
-                  <p className="text-sm text-blue-700 mb-2">
-                    Your custom domain will be:{" "}
+                  <p className="text-sm text-blue-700 mb-3">
+                    Your custom domain is set to:{" "}
                     <strong>reports.{settings.custom_domain}</strong>
                   </p>
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        copyToClipboard(`reports.${settings.custom_domain}`)
-                      }
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy URL
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        window.open(
-                          `https://reports.${settings.custom_domain}`,
-                          "_blank"
-                        )
-                      }
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Visit Portal
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const previewUrl = `${window.location.origin}/portal-preview?agency=${agencyId}`;
+                      window.open(previewUrl, "_blank");
+                    }}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Preview Portal
+                  </Button>
                 </div>
               )}
             </CardContent>

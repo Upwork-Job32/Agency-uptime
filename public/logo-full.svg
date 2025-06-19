@@ -1,0 +1,35 @@
+<svg width="300" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="logoGradientFull" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5B73F5" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle background -->
+  <circle cx="40" cy="40" r="35" fill="url(#logoGradientFull)" stroke="#3730A3" stroke-width="1"/>
+  
+  <!-- Shield/U shape icon -->
+  <path 
+    d="M25 28 L25 45 Q25 55 40 55 Q55 55 55 45 L55 28" 
+    fill="none" 
+    stroke="white" 
+    stroke-width="5" 
+    stroke-linecap="round"
+  />
+  
+  <!-- Inner accent line -->
+  <path 
+    d="M30 33 L30 45 Q30 50 40 50 Q50 50 50 45 L50 33" 
+    fill="none" 
+    stroke="white" 
+    stroke-width="2.5" 
+    stroke-linecap="round" 
+    opacity="0.7"
+  />
+  
+  <!-- Text -->
+  <text x="95" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1F2937" letter-spacing="1px">AGENCY</text>
+  <text x="95" y="55" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#6B7280" letter-spacing="1px">UPTIME</text>
+</svg> 

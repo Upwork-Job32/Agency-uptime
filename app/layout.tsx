@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { StripeProvider } from "@/contexts/StripeContext";
+import { ClientAuthProvider } from "@/contexts/ClientAuthContext";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,8 +26,10 @@ export default function RootLayout({
         <AuthProvider>
           <StripeProvider>
             <SubscriptionProvider>
-              {children}
-              <Toaster />
+              <ClientAuthProvider>
+                {children}
+                <Toaster />
+              </ClientAuthProvider>
             </SubscriptionProvider>
           </StripeProvider>
         </AuthProvider>

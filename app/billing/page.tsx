@@ -48,7 +48,7 @@ const plans = [
     name: "Trial",
     price: "$0",
     period: "14 days",
-    description: "Perfect for trying out Agency Uptime",
+    description: "Perfect for testing Agency Uptime",
     features: [
       "Up to 3 sites monitoring",
       "5-minute check intervals",
@@ -57,10 +57,10 @@ const plans = [
       "Basic uptime reporting",
     ],
     restrictions: [
-      "No PDF report generation",
-      "No team invitations",
-      "No Slack/webhook alerts",
-      "No white-label options",
+      "No white-label branding",
+      "No reselling capabilities",
+      "Limited client sites",
+      "No advanced integrations",
     ],
     current: true,
     planType: "trial",
@@ -69,61 +69,22 @@ const plans = [
     name: "Professional",
     price: "$50",
     period: "per month",
-    description: "Perfect for agencies managing client websites",
+    description:
+      "Complete white-label reseller platform - ready to sell at $20-$50/month per site",
     features: [
-      "Up to 1000 sites monitoring",
+      "Unlimited client sites monitoring",
       "1-minute check intervals",
-      "Email & Slack alerts",
-      "Team collaboration",
-      "PDF report generation",
-      "Custom domain support",
-      "White-label reports",
+      "Full white-label branding",
+      "Your logo, domain, and colors",
+      "Real-time alerts (Slack, Discord, Teams)",
+      "PDF report generation included",
+      "Reseller dashboard access",
+      "Easy client onboarding",
       "Priority support",
     ],
+    highlight: "Built to Print Profit",
     popular: true,
     planType: "basic",
-  },
-];
-
-const addons = [
-  {
-    name: "PDF Reports",
-    description: "Monthly branded PDF reports for your clients",
-    price: "$29/month",
-    id: "pdf_reports",
-    icon: FileText,
-    features: [
-      "Automated monthly reports",
-      "Custom branding",
-      "Email delivery",
-      "Historical data analysis",
-    ],
-  },
-  {
-    name: "Status Pages",
-    description: "Public status pages for your clients to view",
-    price: "$19/month",
-    id: "status_pages",
-    icon: Globe,
-    features: [
-      "Public status pages",
-      "Custom domains",
-      "Incident management",
-      "Subscriber notifications",
-    ],
-  },
-  {
-    name: "Resell Dashboard",
-    description: "White-labeled client dashboard access",
-    price: "$49/month",
-    id: "resell_dashboard",
-    icon: Users,
-    features: [
-      "Client portal access",
-      "White-label branding",
-      "Multi-user management",
-      "Custom permissions",
-    ],
   },
 ];
 
@@ -133,8 +94,6 @@ export default function Billing() {
   const { stripe, isLoading: stripeLoading } = useStripe();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const fetchSubscription = async () => {
     try {
@@ -157,7 +116,6 @@ export default function Billing() {
       if (response.ok) {
         const data = await response.json();
         setSubscription(data.subscription);
-        setSelectedAddons(data.subscription.active_addons || []);
       } else {
         console.error(
           "Failed to fetch subscription:",
@@ -178,7 +136,6 @@ export default function Billing() {
           active_addons: [],
         };
         setSubscription(defaultTrialSubscription);
-        setSelectedAddons([]);
       }
     } catch (error) {
       console.error("Failed to fetch subscription:", error);
@@ -196,7 +153,6 @@ export default function Billing() {
         active_addons: [],
       };
       setSubscription(defaultTrialSubscription);
-      setSelectedAddons([]);
     }
   };
 
@@ -219,7 +175,6 @@ export default function Billing() {
           },
           body: JSON.stringify({
             plan_type: planType,
-            addons: selectedAddons,
           }),
         }
       );
@@ -246,25 +201,6 @@ export default function Billing() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const toggleAddon = (addonId: string) => {
-    setSelectedAddons((prev) =>
-      prev.includes(addonId)
-        ? prev.filter((id) => id !== addonId)
-        : [...prev, addonId]
-    );
-  };
-
-  const calculateTotal = () => {
-    let total = 50; // Base plan price
-    selectedAddons.forEach((addonId) => {
-      const addon = addons.find((a) => a.id === addonId);
-      if (addon) {
-        total += parseInt(addon.price.replace(/\D/g, ""));
-      }
-    });
-    return total;
   };
 
   return (
@@ -417,107 +353,171 @@ export default function Billing() {
             </div>
           </div>
 
-          {/* Add-ons Section */}
-          {subscription?.status !== "trialing" && (
-            <div>
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Add-ons
+          {/* Reseller Business Model Section */}
+          <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 py-16">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  💰 Built to Print Profit
                 </h2>
-                <p className="text-gray-600">
-                  Enhance your plan with powerful additional features
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Agency Uptime lets you break into the SaaS game without
+                  writing a single line of code. For one flat monthly fee, you
+                  get a fully white-labeled uptime monitoring platform branded
+                  to your agency — ready to sell at $20–$50/month per site.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                {addons.map((addon) => (
-                  <Card
-                    key={addon.id}
-                    className={`cursor-pointer transition-all ${
-                      selectedAddons.includes(addon.id)
-                        ? "ring-2 ring-indigo-500 shadow-lg"
-                        : "hover:shadow-md"
-                    }`}
-                    onClick={() => toggleAddon(addon.id)}
-                  >
-                    <CardHeader className="text-center">
-                      <addon.icon className="h-8 w-8 text-indigo-600 mx-auto mb-3" />
-                      <CardTitle className="text-lg">{addon.name}</CardTitle>
-                      <div className="text-2xl font-bold text-gray-900">
-                        {addon.price}
-                      </div>
-                      <CardDescription>{addon.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {addon.features.map((feature, index) => (
-                          <div key={index} className="flex items-center">
-                            <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
-                            <span className="text-xs">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 text-center">
-                        {selectedAddons.includes(addon.id) ? (
-                          <Badge className="bg-green-100 text-green-800">
-                            Selected
-                          </Badge>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            Add to Plan
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              {/* Profit Examples */}
+              <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
+                  Profit Examples
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                          Sites Monitored
+                        </th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                          Client Price (each)
+                        </th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                          You Pay
+                        </th>
+                        <th className="text-left py-4 px-6 font-semibold text-green-600">
+                          Your Monthly Profit
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-4 px-6 font-medium">10</td>
+                        <td className="py-4 px-6">$30</td>
+                        <td className="py-4 px-6">$50</td>
+                        <td className="py-4 px-6 font-bold text-green-600 text-lg">
+                          $250
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-4 px-6 font-medium">50</td>
+                        <td className="py-4 px-6">$25</td>
+                        <td className="py-4 px-6">$50</td>
+                        <td className="py-4 px-6 font-bold text-green-600 text-lg">
+                          $1,200
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-4 px-6 font-medium">100</td>
+                        <td className="py-4 px-6">$20</td>
+                        <td className="py-4 px-6">$50</td>
+                        <td className="py-4 px-6 font-bold text-green-600 text-lg">
+                          $1,950
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              {selectedAddons.length > 0 && (
-                <Card className="max-w-md mx-auto">
-                  <CardHeader>
-                    <CardTitle>Order Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Professional Plan</span>
-                      <span>$50/month</span>
-                    </div>
-                    {selectedAddons.map((addonId) => {
-                      const addon = addons.find((a) => a.id === addonId);
-                      return (
-                        <div key={addonId} className="flex justify-between">
-                          <span>{addon?.name}</span>
-                          <span>{addon?.price}</span>
-                        </div>
-                      );
-                    })}
-                    <hr />
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>${calculateTotal()}/month</span>
-                    </div>
-                    <Button
-                      onClick={() => handleUpgrade("basic")}
-                      disabled={isLoading}
-                      className="w-full mt-4"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <CreditCard className="h-4 w-4 mr-2" />
-                      )}
-                      Upgrade Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Features Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Globe className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    Unlimited Sites
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Monitor as many client sites as you want
+                  </p>
+                </div>
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BarChart3 className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    Full White-Label
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Your logo, domain, and colors
+                  </p>
+                </div>
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    Real-Time Alerts
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Slack, Discord, Teams, and more
+                  </p>
+                </div>
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    No Tech Skills
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    We host everything for you
+                  </p>
+                </div>
+              </div>
+
+              {/* Upsell Opportunities */}
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
+                  🔧 Start with Uptime. Expand from There.
+                </h3>
+                <p className="text-center text-gray-600 mb-8">
+                  Once you're in the door, the upsell opportunities are endless
+                </p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      SEO & Performance Reports
+                    </span>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      Security & SSL Monitoring
+                    </span>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      Website Maintenance Retainers
+                    </span>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      Hosting & DNS Management
+                    </span>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      Conversion Optimization
+                    </span>
+                  </div>
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-sm font-medium">
+                      AI Chat & Lead Recovery Tools
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </ProtectedRoute>

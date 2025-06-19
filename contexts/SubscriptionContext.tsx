@@ -60,7 +60,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/api/billing/subscription",
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+        }/api/billing/subscription`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -116,8 +118,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
   const isExpired = subscription?.status === "expired";
 
   // Feature restrictions for trial users
-  const canGenerateReports =
-    isPro && subscription?.active_addons.includes("pdf_reports");
+  const canGenerateReports = isPro;
   const canInviteTeam = isPro;
   const canUseSlackAlerts = isPro;
   const canUseAddons = isPro;

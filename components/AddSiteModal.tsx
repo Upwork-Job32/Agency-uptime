@@ -20,15 +20,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Plus, Lock, CreditCard, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AddSiteButton } from "@/components/AddSiteButton";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 interface AddSiteModalProps {
   onSiteAdded: () => void;
+  currentSiteCount?: number;
 }
 
-export function AddSiteModal({ onSiteAdded }: AddSiteModalProps) {
+export function AddSiteModal({
+  onSiteAdded,
+  currentSiteCount = 0,
+}: AddSiteModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -39,9 +45,25 @@ export function AddSiteModal({ onSiteAdded }: AddSiteModalProps) {
     tags: "",
   });
   const { toast } = useToast();
+  const { isPro, isTrial } = useSubscription();
+
+  // Check if trial user has reached site limit
+  const hasReachedTrialLimit = isTrial && currentSiteCount >= 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check trial limits before submitting
+    if (hasReachedTrialLimit) {
+      toast({
+        title: "Site Limit Reached",
+        description:
+          "Trial users can monitor up to 3 sites. Upgrade to Professional for unlimited sites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -89,10 +111,23 @@ export function AddSiteModal({ onSiteAdded }: AddSiteModalProps) {
     }
   };
 
+  // Show disabled button for trial users who have reached the limit
+  if (hasReachedTrialLimit) {
+    return (
+      <Button variant="outline" className="w-full justify-start" disabled>
+        <Lock className="h-4 w-4 mr-2" />
+        Add Site
+      </Button>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <AddSiteButton onClick={() => setIsOpen(true)} />
+        <Button variant="outline" className="w-full justify-start">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Site
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -100,6 +135,11 @@ export function AddSiteModal({ onSiteAdded }: AddSiteModalProps) {
           <DialogDescription>
             Add a new website to monitor. We&apos;ll check its status at regular
             intervals.
+            {isTrial && (
+              <div className="mt-2 text-sm text-gray-600">
+                Trial plan: {currentSiteCount}/3 sites used.
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

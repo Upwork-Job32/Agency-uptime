@@ -77,63 +77,13 @@ export function InviteTeamModal() {
     }
   };
 
-  // Show upgrade prompt for trial users
+  // Show disabled button for trial users
   if (!canInviteTeam) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start relative">
-            <Lock className="h-4 w-4 mr-2" />
-            Invite Team
-            <Badge className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 py-0.5">
-              Pro
-            </Badge>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Lock className="h-5 w-5 mr-2 text-yellow-500" />
-              Upgrade Required
-            </DialogTitle>
-            <DialogDescription>
-              Team collaboration is available for Pro plan users.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
-              <h3 className="font-semibold text-gray-900 mb-2">
-                What you&apos;ll get with Pro:
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-indigo-600" />
-                  Unlimited team members
-                </li>
-                <li className="flex items-center">
-                  <Mail className="h-4 w-4 mr-2 text-indigo-600" />
-                  Role-based permissions
-                </li>
-                <li className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-indigo-600" />
-                  Collaborative monitoring
-                </li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Maybe Later
-            </Button>
-            <Button asChild>
-              <Link href="/billing">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Upgrade Now
-              </Link>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Button variant="outline" className="w-full justify-start" disabled>
+        <Lock className="h-4 w-4 mr-2" />
+        Invite Team
+      </Button>
     );
   }
 

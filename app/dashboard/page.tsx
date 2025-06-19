@@ -31,8 +31,12 @@ import {
   Users,
   CreditCard,
   Download,
+  Crown,
+  Lock,
+  Shield,
+  Zap,
 } from "lucide-react";
-import { Logo } from "@/components/ui/logo";
+import { FullLogo } from "@/components/ui/full-logo";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -51,6 +55,7 @@ import { TestMonitoringButton } from "@/components/TestMonitoringButton";
 import { MonitoringStatus } from "@/components/MonitoringStatus";
 import { WhiteLabelSettings } from "@/components/WhiteLabelSettings";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import Link from "next/link";
 
 interface Site {
   id: number;
@@ -182,25 +187,33 @@ export default function Dashboard() {
     (site) => site.current_status === "down"
   ).length;
 
+  // Plan limits
+  const siteLimit = isPro ? 1000 : 3;
+  const hasReachedLimit = stats.total_sites >= siteLimit;
+
   const getStatusColor = (status?: string) => {
     switch (status) {
       case "up":
         return "text-green-600";
       case "down":
         return "text-red-600";
+      case "warning":
+        return "text-yellow-600";
       default:
-        return "text-gray-400";
+        return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case "up":
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "down":
-        return <XCircle className="h-4 w-4" />;
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      case "warning":
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -213,71 +226,121 @@ export default function Dashboard() {
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
 
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
-    return `${Math.floor(diffMins / 1440)} days ago`;
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Logo className="h-8 w-8" />
-                  <span className="text-2xl font-bold text-gray-900">
-                    Agency Uptime
-                  </span>
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center">
+                <FullLogo />
+                <div className="hidden md:block ml-6">
+                  <nav className="flex space-x-8">
+                    <Link
+                      href="/dashboard"
+                      className="text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-blue-500"
+                    >
+                      Dashboard
+                    </Link>
+                    {isPro && (
+                      <Link
+                        href="/white-label"
+                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 text-sm font-medium"
+                      >
+                        <Crown className="h-4 w-4 mr-1" />
+                        White-Label
+                      </Link>
+                    )}
+                  </nav>
                 </div>
-                <Badge className="bg-indigo-100 text-indigo-800">
-                  Dashboard
-                </Badge>
               </div>
+
               <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="sm">
-                  <Bell className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {user?.name || "Agency Admin"}
-                  </span>
-                </div>
+                <Badge
+                  variant={
+                    isPro ? "default" : isExpired ? "destructive" : "secondary"
+                  }
+                  className={
+                    isPro
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                      : ""
+                  }
+                >
+                  {isPro ? (
+                    <>
+                      <Crown className="h-3 w-3 mr-1" />
+                      Pro Plan
+                    </>
+                  ) : isExpired ? (
+                    "Expired"
+                  ) : (
+                    "Trial"
+                  )}
+                </Badge>
+
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={logout}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300"
+                  className="text-gray-700"
                 >
-                  Logout
+                  Sign out
                 </Button>
               </div>
             </div>
           </div>
         </header>
 
+        {/* Pro Upgrade Banner for Trial Users */}
+        {!isPro && (
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Zap className="h-6 w-6" />
+                  <div>
+                    <h3 className="font-semibold">
+                      Upgrade to Pro for $50/month
+                    </h3>
+                    <p className="text-purple-100 text-sm">
+                      Unlock white-labeling, unlimited sites, and start
+                      reselling at $20-$50/month per client
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <p className="text-sm text-purple-100">Potential Revenue</p>
+                    <p className="font-bold">$200-500/month per client</p>
+                  </div>
+                  <BillingSettingsModal />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Page Header */}
+          {/* Welcome Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Welcome back, {user?.name}
+                </h1>
                 <p className="text-gray-600 mt-1">
-                  Monitor your clients&apos; websites and track performance
+                  {isPro
+                    ? "Your white-label monitoring platform is ready to resell"
+                    : "Monitor your websites and upgrade to start reselling"}
                 </p>
               </div>
               <div className="flex items-center space-x-4">
@@ -295,7 +358,9 @@ export default function Dashboard() {
                     <SelectItem value="90d">Last 90 days</SelectItem>
                   </SelectContent>
                 </Select>
-                <AddSiteModal onSiteAdded={handleSiteAdded} />
+                {!hasReachedLimit && (
+                  <AddSiteModal onSiteAdded={handleSiteAdded} />
+                )}
               </div>
             </div>
           </div>
@@ -314,7 +379,8 @@ export default function Dashboard() {
                   {isLoadingStats ? "..." : stats.total_sites}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.active_sites} active
+                  {stats.active_sites} active • {siteLimit - stats.total_sites}{" "}
+                  remaining
                 </p>
               </CardContent>
             </Card>
@@ -382,8 +448,14 @@ export default function Dashboard() {
               <Tabs defaultValue="sites" className="space-y-4">
                 <TabsList>
                   <TabsTrigger value="sites">Sites</TabsTrigger>
-                  <TabsTrigger value="alerts">Alerts</TabsTrigger>
-                  <TabsTrigger value="reports">Reports</TabsTrigger>
+                  <TabsTrigger value="alerts">
+                    Alerts
+                    {!isPro && <Lock className="h-3 w-3 ml-1" />}
+                  </TabsTrigger>
+                  <TabsTrigger value="reports">
+                    Reports
+                    {!isPro && <Lock className="h-3 w-3 ml-1" />}
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sites" className="space-y-4">
@@ -393,7 +465,11 @@ export default function Dashboard() {
                         <div>
                           <CardTitle>Monitored Sites</CardTitle>
                           <CardDescription>
-                            Manage and monitor your clients&apos; websites
+                            Manage and monitor your websites
+                            {!isPro &&
+                              ` • ${
+                                siteLimit - stats.total_sites
+                              } sites remaining`}
                           </CardDescription>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -413,6 +489,28 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {hasReachedLimit && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                          <div className="flex items-center">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
+                            <div>
+                              <h3 className="font-medium text-yellow-800">
+                                Site Limit Reached
+                              </h3>
+                              <p className="text-sm text-yellow-700 mt-1">
+                                You've reached your limit of {siteLimit} sites.{" "}
+                                {!isPro && (
+                                  <span>
+                                    Upgrade to Pro for unlimited sites and
+                                    white-labeling features.
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {isLoadingSites ? (
                         <div className="text-center py-8">
                           <p className="text-gray-500">Loading sites...</p>
@@ -425,7 +523,7 @@ export default function Dashboard() {
                               ? "No sites added yet"
                               : "No sites match your search"}
                           </p>
-                          {sites.length === 0 && (
+                          {sites.length === 0 && !hasReachedLimit && (
                             <AddSiteModal onSiteAdded={handleSiteAdded} />
                           )}
                         </div>
@@ -464,32 +562,25 @@ export default function Dashboard() {
                                           : "destructive"
                                       }
                                     >
-                                      {site.current_status?.toUpperCase() ||
-                                        "UNKNOWN"}
+                                      {site.current_status || "Unknown"}
                                     </Badge>
                                   </div>
                                   <div className="flex items-center space-x-1">
-                                    <span className="font-medium text-gray-900">
-                                      Uptime
+                                    <span>Uptime:</span>
+                                    <span className="font-medium">
+                                      {site.uptime_percentage}%
                                     </span>
-                                    <span>{site.uptime_percentage}%</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
-                                    <span className="font-medium text-gray-900">
-                                      Interval
+                                    <span>Added:</span>
+                                    <span className="font-medium">
+                                      {formatTimeAgo(site.created_at)}
                                     </span>
-                                    <span>{site.check_interval}m</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <Clock className="h-4 w-4" />
-                                    <span>
-                                      {new Date(
-                                        site.updated_at
-                                      ).toLocaleDateString()}
-                                    </span>
-                                    <span className="text-xs">Last Check</span>
                                   </div>
                                 </div>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                           ))}
@@ -502,46 +593,37 @@ export default function Dashboard() {
                 <TabsContent value="alerts" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Recent Alerts</CardTitle>
+                      <CardTitle className="flex items-center">
+                        Alerts & Notifications
+                        {!isPro && (
+                          <Lock className="h-4 w-4 ml-2 text-gray-400" />
+                        )}
+                      </CardTitle>
                       <CardDescription>
-                        Latest notifications and incidents
+                        {isPro
+                          ? "Manage your monitoring alerts and integrations"
+                          : "Upgrade to Pro to access advanced alerting features"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {alerts.length === 0 ? (
-                        <div className="text-center py-8">
-                          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">No recent alerts</p>
+                      {!isPro ? (
+                        <div className="text-center py-12">
+                          <Shield className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                            Pro Feature
+                          </h3>
+                          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                            Get instant alerts via Slack, Discord, Teams, and
+                            email when your sites go down. Plus advanced
+                            reporting and white-label features.
+                          </p>
+                          <BillingSettingsModal />
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          {alerts.map((alert) => (
-                            <div
-                              key={alert.id}
-                              className="flex items-start space-x-4 p-4 border rounded-lg"
-                            >
-                              <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium">
-                                    {alert.site_name}
-                                  </h4>
-                                  <span className="text-xs text-gray-500">
-                                    {formatTimeAgo(alert.sent_at)}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {alert.message}
-                                </p>
-                                <Badge
-                                  variant="outline"
-                                  className="mt-2 text-xs"
-                                >
-                                  {alert.type}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
+                        <div className="text-center py-8">
+                          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No alerts to display</p>
+                          <ManageAlertsModal />
                         </div>
                       )}
                     </CardContent>
@@ -551,20 +633,42 @@ export default function Dashboard() {
                 <TabsContent value="reports" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Reports</CardTitle>
+                      <CardTitle className="flex items-center">
+                        Reports & Analytics
+                        {!isPro && (
+                          <Lock className="h-4 w-4 ml-2 text-gray-400" />
+                        )}
+                      </CardTitle>
                       <CardDescription>
-                        Generate and download monitoring reports
+                        {isPro
+                          ? "Generate detailed monitoring reports"
+                          : "Upgrade to Pro to access professional reporting features"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-center py-8">
-                        <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 mb-4">
-                          Generate comprehensive reports for your monitoring
-                          data
-                        </p>
-                        <GenerateReportModal />
-                      </div>
+                      {!isPro ? (
+                        <div className="text-center py-12">
+                          <BarChart3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                            Pro Feature
+                          </h3>
+                          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                            Generate branded PDF reports for your clients.
+                            Perfect for white-label reselling at $20-50/month
+                            per client.
+                          </p>
+                          <BillingSettingsModal />
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500 mb-4">
+                            Generate comprehensive reports for your monitoring
+                            data
+                          </p>
+                          <GenerateReportModal />
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -578,11 +682,34 @@ export default function Dashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <AddSiteModal onSiteAdded={handleSiteAdded} />
-                  <GenerateReportModal />
-                  <ManageAlertsModal />
-                  <WhiteLabelSettings />
-                  <InviteTeamModal />
+                  {!hasReachedLimit && (
+                    <AddSiteModal
+                      onSiteAdded={handleSiteAdded}
+                      currentSiteCount={stats.total_sites}
+                    />
+                  )}
+                  {isPro ? (
+                    <>
+                      <GenerateReportModal />
+                      <ManageAlertsModal />
+                      <Link href="/white-label">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                        >
+                          <Crown className="h-4 w-4 mr-2" />
+                          White-Label Settings
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500 mb-3">
+                        Unlock all features with Pro
+                      </p>
+                      <BillingSettingsModal />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -596,35 +723,60 @@ export default function Dashboard() {
                     <Badge
                       className={
                         isPro
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
                           : isExpired
                           ? "bg-red-100 text-red-800"
                           : "bg-indigo-100 text-indigo-800"
                       }
                     >
-                      {isPro ? "Professional" : isExpired ? "Expired" : "Trial"}
+                      {isPro ? (
+                        <>
+                          <Crown className="h-3 w-3 mr-1" />
+                          Professional
+                        </>
+                      ) : isExpired ? (
+                        "Expired"
+                      ) : (
+                        "Trial"
+                      )}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Sites Used</span>
                     <span className="text-sm font-medium">
-                      {stats.total_sites} / {isPro ? "1000" : "3"}
+                      {stats.total_sites} / {isPro ? "∞" : siteLimit}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        isPro ? "bg-green-600" : "bg-indigo-600"
+                        isPro
+                          ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                          : "bg-indigo-600"
                       }`}
                       style={{
-                        width: `${Math.min(
-                          (stats.total_sites / (isPro ? 1000 : 3)) * 100,
-                          100
-                        )}%`,
+                        width: isPro
+                          ? "100%"
+                          : `${Math.min(
+                              (stats.total_sites / siteLimit) * 100,
+                              100
+                            )}%`,
                       }}
                     ></div>
                   </div>
-                  <BillingSettingsModal />
+                  {!isPro && (
+                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                      <h4 className="font-semibold text-purple-900 text-sm mb-2">
+                        Ready to Start Reselling?
+                      </h4>
+                      <p className="text-xs text-purple-700 mb-3">
+                        Pro plan includes white-labeling, unlimited sites, and
+                        everything you need to resell at $20-50/month per
+                        client.
+                      </p>
+                      <BillingSettingsModal />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
