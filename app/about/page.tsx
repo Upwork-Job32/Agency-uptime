@@ -18,6 +18,8 @@ import {
   Shield,
   Zap,
   Users,
+  Github,
+  ExternalLink,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
@@ -114,35 +116,46 @@ export default function About() {
           </Card>
         </div>
 
-        {/* Contact Information */}
+        {/* Company Information */}
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Contact with Renan</CardTitle>
+              <CardTitle className="text-2xl">Agency Uptime Platform</CardTitle>
               <CardDescription>
-                Get in touch through mail or discord
+                Professional monitoring solution for agencies
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-center space-x-8">
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                  <Mail className="h-6 w-6 text-red-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">Email</p>
-                    <a
-                      href="mailto:renan.work32@gmail.com"
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      renan.work32@gmail.com
-                    </a>
-                  </div>
-                </div>
+              <div className="text-center">
+                <p className="text-gray-600 mb-6">
+                  Agency Uptime provides comprehensive website monitoring and
+                  uptime tracking specifically designed for digital agencies.
+                  Our platform helps you maintain your clients&apos; websites
+                  with professional monitoring, instant alerts, and white-label
+                  reporting capabilities.
+                </p>
 
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                  <MessageCircle className="h-6 w-6 text-indigo-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">Discord</p>
-                    <p className="text-gray-600">fire2214</p>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2">
+                      Key Features
+                    </h3>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• Real-time monitoring</li>
+                      <li>• Custom alert systems</li>
+                      <li>• White-label reporting</li>
+                      <li>• Multi-client management</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2">Benefits</h3>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• Reduce client downtime</li>
+                      <li>• Professional reporting</li>
+                      <li>• Automated monitoring</li>
+                      <li>• Scalable for agencies</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -155,17 +168,16 @@ export default function About() {
                 </p>
                 <div className="flex justify-center space-x-4">
                   <Button variant="outline" asChild>
-                    <a href="mailto:renan.work32@gmail.com">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Email
-                    </a>
+                    <Link href="/register">
+                      <Users className="h-4 w-4 mr-2" />
+                      Get Started
+                    </Link>
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigator.clipboard.writeText("fire2214")}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Copy Discord
+                  <Button variant="outline" asChild>
+                    <Link href="/login">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Link>
                   </Button>
                 </div>
               </div>

@@ -11,6 +11,8 @@
 # next.js
 /.next/
 /out/
+# Ignore .env file containing sensitive information
+.env
 
 # production
 /build
